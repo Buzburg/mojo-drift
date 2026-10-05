@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.mojo_drift/
+build/
+*.log
+.DS_Store
