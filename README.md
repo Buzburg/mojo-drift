@@ -1,48 +1,36 @@
-# mojo-drift 🧭
+# Mojo Drift 🧭
 
-**Release status: experimental.** The Python CLI runs its own reference implementation; it does not load `core.mojo`. The separate native kernel compiles with Mojo 1.1.0. Python tests and native compilation do not establish end-to-end native speed, model accuracy, or production safety. Historical timing and savings figures below are not release guarantees. See [launch review](LAUNCH_READINESS.md).
+**Asked for a bug fix. Got a redesign?**
 
-> [!NOTE]
-> **In Plain English:** When AI coding assistants run multi-turn tasks, they often suffer from "spec drift"—starting with a simple bug fix and ending up refactoring unrelated styling or database schemas. `mojo-drift` is a real-time guardrail that calculates angular drift between the agent's actions and the original goal in microseconds, intercepting the agent before it burns your token budget.
+Compare an agent's proposed action with the original goal and keep a local timeline of the results. Drift uses deterministic hashed word vectors and lexical overlap to flag actions that deserve a second look.
 
----
+## Try it
 
-## ⚡ Features
+Requires Python 3.11+. No runtime dependencies, API keys, or model download.
 
-- **256-Dimensional Phase-Space Trajectory Tracking:** Encodes goal specifications into anchor vectors.
-- **Microsecond Angular Drift Calculation:** $\theta = \arccos(\text{cosine\_similarity})$ in degrees.
-- **Harness Pre-Tool Hook:** Integrates directly into `.claude/hooks` or CI agents to alert before an out-of-scope tool call executes.
-- **Session Trajectory Ledger:** Persists multi-turn trajectory history to visualize divergence over time.
-
----
-
-## 🚀 Quickstart
-
-```bash
-# Check if an action aligns with the original goal
-python drift.py check --goal "Fix JWT token expiration" --action "Inspect auth_controller.py"
-
-# Initialize tracking session for an agent
+```sh
+git clone https://github.com/Buzburg/mojo-drift.git
+cd mojo-drift
+python drift.py check --goal "Fix JWT token expiration" --action "Fix JWT token expiration"
 python drift.py init --goal "Fix JWT token expiration"
-
-# Record each step during the agent session
-python drift.py step --action "Edit components/button.css"
-# ⚠ WARNING: Agent has drifted significantly from the original goal! (Drift: 74.2°)
-
-# View session trajectory
+python drift.py step --action "Redesign the checkout page colors"
 python drift.py status
 ```
 
----
+An alert exits 1. A missing session on `step` exits 2. Session history lives in `.mojo_drift/session.json` in the current directory; `init` starts a new history and replaces the previous one.
 
-## 🧪 Testing
+## A signal for review
 
-```bash
-python -m unittest test_drift.py
+The angle and `SAFE`/`WARN`/`DRIFT_ALERT` labels are **lexical heuristics**, not calibrated probabilities or reliable judgments of relevance. `SAFE` means the heuristic did not flag the text. Synonyms, short actions, and non-English text can produce misleading results. This tool does not intercept another agent automatically or prevent commands from running; a harness must explicitly consult it.
+
+The supported CLI is Python. The separate `core.mojo` experiment compiles with Mojo 1.1.0 but is not loaded by the CLI. There is no measured end-to-end native speed guarantee.
+
+## Verify
+
+```sh
+python -m unittest discover -v
+# Optional native experiment:
+mojo build core.mojo -o drift-native
 ```
 
----
-
-## 📄 License
-
-[MIT](LICENSE) © 2026 Buzburg AI
+Experimental advisory tool. [Release verification](RELEASE_VERIFICATION.md). MIT licensed. Built by Buzburg.

@@ -57,12 +57,14 @@ def cosine_similarity(vec_a, vec_b):
     return sum(a * b for a, b in zip(vec_a, vec_b))
 
 def evaluate_drift(goal: str, action: str, warn_threshold: float = 65.0, alert_threshold: float = 80.0):
+    if not tokenize(goal) or not tokenize(action):
+        raise ValueError("Goal and action must contain words")
     start = time.perf_counter()
     g_tokens = set(tokenize(goal))
     a_tokens = set(tokenize(action))
 
-    g_vec = bundle_text(list(g_tokens))
-    a_vec = bundle_text(list(a_tokens))
+    g_vec = bundle_text(sorted(g_tokens))
+    a_vec = bundle_text(sorted(a_tokens))
 
     dot = max(-1.0, min(1.0, cosine_similarity(g_vec, a_vec)))
     # Angular drift in degrees
@@ -156,6 +158,8 @@ def main():
         print(f"✔ Initialized tracking session with goal: {args.goal}")
     elif args.command == "step":
         res = tracker.record_step(args.action)
+        if res is None:
+            sys.exit(2)
         if res:
             print(f"Step {len(tracker.load_session()['steps'])}: [{res['verdict']}] Drift: {res['drift_angle_deg']}°")
             if res["verdict"] == "DRIFT_ALERT":
